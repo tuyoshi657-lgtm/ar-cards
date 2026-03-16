@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>北磻磨造形所 AR名刺</title>
+
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: sans-serif;
+      touch-action: none;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    a-scene {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+
+    canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+
+    video {
+      object-fit: cover !important;
+    }
+
+    #msg {
+      position: fixed;
+      top: max(10px, env(safe-area-inset-top));
+      left: 10px;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.72);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      max-width: 85%;
+    }
+
+    #ui-buttons {
+      position: fixed;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 9999;
+    }
+
+    .action-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: rgba(17, 17, 17, 0.9);
+      color: #f5d36a;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
+<body>
+  <div id="msg">名刺をカメラに映してください</div>
+
+  <div id="ui-buttons">
+    <button id="mailBtn" class="action-btn">MAIL</button>
+    <button id="webBtn" class="action-btn">WEB</button>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets/business-card.mind; autoStart: true; filterMinCF: 0.0001; filterBeta: 0.001;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: false"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+  >
+    <a-assets>
+      <img id="person" src="./assets/person.png" />
+      <img id="photo1" src="./assets/photo1.jpg" />
+      <img id="photo2" src="./assets/photo2.jpg" />
+      <img id="photo3" src="./assets/photo3.jpg" />
+      <img id="photo4" src="./assets/photo4.jpg" />
+      <img id="photo5" src="./assets/photo5.jpg" />
+      <img id="photo6" src="./assets/photo6.jpg" />
+      <img id="photo7" src="./assets/photo7.jpg" />
+      <img id="photo8" src="./assets/photo8.jpg" />
+      <img id="photo9" src="./assets/photo9.jpg" />
+      <img id="photo10" src="./assets/photo10.jpg" />
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+
+      <!-- 人物 -->
+      <a-plane
+        src="#person"
+        position="-0.55 0.08 0"
+        width="0.50"
+        height="1.00"
+        transparent="true">
+      </a-plane>
+
+      <!-- 写真 -->
+      <a-plane
+        id="slide"
+        src="#photo1"
+        position="0.42 0.45 0"
+        width="0.82"
+        height="0.55">
+      </a-plane>
+
+      <!-- 会社名（背景帯なし） -->
+      <a-text
+        value="北磻磨造形所"
+        position="0 -0.22 0"
+        align="center"
+        color="#FFD700"
+        width="3.2">
+      </a-text>
+
+      <!-- サブタイトル -->
+      <a-text
+        value="造形コンクリート"
+        position="0 -0.34 0"
+        align="center"
+        color="#E6B800"
+        width="2.6">
+      </a-text>
+
+      <!-- AR内の小さいMAIL -->
+      <a-text
+        value="MAIL"
+        position="-0.22 -0.50 0"
+        align="center"
+        color="#FFFFFF"
+        width="1.2">
+      </a-text>
+
+      <!-- AR内の小さいWEB -->
+      <a-text
+        value="WEB"
+        position="0.22 -0.50 0"
+        align="center"
+        color="#FFFFFF"
+        width="1.2">
+      </a-text>
+
+    </a-entity>
+
+    <a-light type="ambient" intensity="1"></a-light>
+  </a-scene>
+
+  <script>
+    const msg = document.getElementById("msg");
+    const target = document.getElementById("target");
+    const slide = document.getElementById("slide");
+    const mailBtn = document.getElementById("mailBtn");
+    const webBtn = document.getElementById("webBtn");
+
+    const mailUrl = "mailto:kitaharima.studio@gmail.com";
+    const webUrl = "https://3a-craftworks.com";
+
+    const images = [
+      "#photo1",
+      "#photo2",
+      "#photo3",
+      "#photo4",
+      "#photo5",
+      "#photo6",
+      "#photo7",
+      "#photo8",
+      "#photo9",
+      "#photo10"
+    ];
+
+    let currentIndex = 0;
+    let slideInterval = null;
+
+    function startSlideShow() {
+      if (slideInterval) return;
+
+      slideInterval = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= images.length) currentIndex = 0;
+        slide.setAttribute("src", images[currentIndex]);
+      }, 3000);
+    }
+
+    function stopSlideShow() {
+      if (slideInterval) {
+        clearInterval(slideInterval);
+        slideInterval = null;
+      }
+    }
+
+    function openMail() {
+      window.location.href = mailUrl;
+    }
+
+    function openWeb() {
+      window.open(webUrl, "_blank");
+    }
+
+    target.addEventListener("targetFound", () => {
+      msg.innerText = "名刺を認識しました";
+      currentIndex = 0;
+      slide.setAttribute("src", images[currentIndex]);
+      startSlideShow();
+    });
+
+    target.addEventListener("targetLost", () => {
+      msg.innerText = "名刺をカメラに映してください";
+      stopSlideShow();
+    });
+
+    mailBtn.addEventListener("click", openMail);
+    webBtn.addEventListener("click", openWeb);
+
+    window.addEventListener("error", (e) => {
+      msg.innerText = "エラー: " + e.message;
+    });
+  </script>
+</body>
+</html>
